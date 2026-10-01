@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { existsSync, readFileSync } from "node:fs";
-import { extname, join, normalize } from "node:path";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { extname, join, normalize, resolve } from "node:path";
 import { deleteEntity, isCollection, upsertEntity, ValidationError, verifyEntity } from "../src/core/admin/mutations";
 import type { Transaction, UserPreferences, UserRewardState } from "../src/core/domain/types";
 import { parseTransactionInput, toTransaction } from "../src/core/parser/transactionParser";
@@ -20,7 +20,7 @@ import { FileStore } from "./store";
 
 const PORT = Number(process.env.PORT ?? 8787);
 const ADMIN_TOKEN = process.env.TAPWISE_ADMIN_TOKEN;
-const DIST = join(process.cwd(), "dist");
+const DIST = resolve(process.cwd(), "dist");
 
 const store = new FileStore();
 const providers = configuredProviders();
@@ -49,16 +49,31 @@ function isAdmin(req: IncomingMessage): boolean {
   return req.headers.authorization === `Bearer ${ADMIN_TOKEN}`;
 }
 
-const MIME: Record<string, string> = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".json": "application/json" };
+const MIME: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".json": "application/json",
+  ".png": "image/png",
+  ".ico": "image/x-icon",
+  ".woff2": "font/woff2",
+};
 
 function serveStatic(pathname: string, res: ServerResponse): boolean {
   if (!existsSync(DIST)) return false;
-  const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, "");
-  let file = join(DIST, safe);
-  if (!file.startsWith(DIST) || !existsSync(file) || file === DIST) file = join(DIST, "index.html");
-  if (!existsSync(file)) return false;
-  res.writeHead(200, { "content-type": MIME[extname(file)] ?? "application/octet-stream" });
-  res.end(readFileSync(file));
+  const requested = resolve(DIST, `.${normalize(decodeURIComponent(pathname))}`);
+  const isFile = (f: string) => f.startsWith(DIST) && existsSync(f) && statSync(f).isFile();
+  // Unknown paths fall back to index.html (the app uses hash routing).
+  const file = isFile(requested) ? requested : join(DIST, "index.html");
+  if (!isFile(file)) return false;
+  const body = readFileSync(file);
+  const immutable = file.includes(`${join(DIST, "assets")}`);
+  res.writeHead(200, {
+    "content-type": MIME[extname(file)] ?? "application/octet-stream",
+    "cache-control": immutable ? "public, max-age=31536000, immutable" : "no-cache",
+  });
+  res.end(body);
   return true;
 }
 
@@ -163,7 +178,10 @@ async function main() {
   rebuild();
   startScheduler(store, providers, rebuild);
   createServer((req, res) => {
-    handle(req, res).catch((e) => send(res, 500, { error: (e as Error).message }));
+    handle(req, res).catch((e) => {
+      if (res.headersSent) res.end();
+      else send(res, 500, { error: (e as Error).message });
+    });
   }).listen(PORT, () => console.log(`[server] TapWise API on http://localhost:${PORT}`));
 }
 

@@ -35,6 +35,36 @@ If the API server is reachable the UI uses its refreshed dataset. If not (e.g. s
 
 ---
 
+## Running the website in production
+
+One Node process serves both the website and the API:
+
+```bash
+npm install
+npm run build        # builds the site into dist/
+npm start            # http://localhost:8787 — site + API + refresh scheduler
+```
+
+Or with Docker:
+
+```bash
+docker build -t tapwise .
+docker run -p 8787:8787 -v tapwise-data:/data -e TAPWISE_ADMIN_TOKEN=change-me tapwise
+```
+
+| Variable | Purpose |
+|---|---|
+| `PORT` | Port to listen on (default 8787) |
+| `TAPWISE_ADMIN_TOKEN` | **Set this in production.** Without it, anyone can use `/api/admin/*` |
+| `TAPWISE_STORE` | Path of the data file (default `server/.data/store.json`); put it on a persistent disk |
+| `TAPWISE_DISABLE_DEMO=1` | Stop loading the fictional demo data once real feeds are connected |
+
+Any host that runs a Node 20+ app or a container works (for example Render, Railway, Fly.io, Azure App Service, AWS, or a VPS). Give it a persistent disk for `TAPWISE_STORE`, otherwise admin edits are lost on redeploy.
+
+A static-only host (Netlify, Vercel static, GitHub Pages, S3) can serve `dist/` on its own. In that case the site runs in offline demo mode with the bundled data and no live refresh.
+
+---
+
 ## What's included
 
 | Area | Where |
