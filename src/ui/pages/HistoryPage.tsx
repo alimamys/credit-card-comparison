@@ -1,7 +1,7 @@
 import { categoryMeta } from "../../core/domain/categories";
 import { summariseByMonth } from "../../core/history/history";
 import { formatAED, formatDate } from "../../core/format";
-import { EmptyState } from "../components/ui";
+import { ConfirmButton, EmptyState } from "../components/ui";
 import { navigate } from "../router";
 import { useCatalog } from "../state/AppState";
 
@@ -63,9 +63,7 @@ export function HistoryPage() {
       <section className="panel">
         <div className="panel__title-row">
           <h2 className="panel__title">Purchases</h2>
-          <button type="button" className="btn btn--danger-ghost btn--sm" onClick={() => confirm("Clear all history on this device?") && clearHistory()}>
-            Clear history
-          </button>
+          <ConfirmButton onConfirm={clearHistory}>Clear history</ConfirmButton>
         </div>
         <ul className="history-list">
           {history.map((e) => {

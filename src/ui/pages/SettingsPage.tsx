@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { RewardCurrency } from "../../core/domain/types";
 import { formatAED, formatAEDPerUnit, formatDate, formatValuationRate } from "../../core/format";
-import { Badge, currencyTone, InfoTip, MILES_DISCLAIMER, POINTS_DISCLAIMER } from "../components/ui";
+import { Badge, ConfirmButton, currencyTone, InfoTip, MILES_DISCLAIMER, POINTS_DISCLAIMER } from "../components/ui";
 import { useCatalog } from "../state/AppState";
 
 function ValuationRow({ currency }: { currency: RewardCurrency }) {
@@ -123,13 +123,9 @@ export function SettingsPage() {
         <p className="small muted">
           Data source: <strong>{repo?.mode === "remote" ? "TapWise API server (refreshed dataset)" : "bundled demo dataset (no server connected)"}</strong>. Your wallet, valuations, registrations and history never leave this browser.
         </p>
-        <button
-          type="button"
-          className="btn btn--danger-ghost"
-          onClick={() => confirm("Remove your wallet, valuations, registrations and history from this device?") && resetAll()}
-        >
+        <ConfirmButton className="btn btn--danger-ghost" confirmLabel="Click again to erase everything" onConfirm={resetAll}>
           Reset all local data
-        </button>
+        </ConfirmButton>
       </section>
     </div>
   );

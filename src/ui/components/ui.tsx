@@ -125,3 +125,28 @@ export const MILES_DISCLAIMER =
   "The value of airline miles depends on how they are redeemed. This estimate is used to compare rewards consistently and does not represent a guaranteed cash redemption value.";
 export const POINTS_DISCLAIMER =
   "Points are valued using an estimated redemption value so different rewards can be compared. Actual value depends on how you redeem them.";
+
+/** Two-step destructive button (browser confirm() dialogs are not available everywhere). */
+export function ConfirmButton({ onConfirm, children, confirmLabel = "Click again to confirm", className = "btn btn--danger-ghost btn--sm", disabled }: { onConfirm(): void; children: ReactNode; confirmLabel?: string; className?: string; disabled?: boolean }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  return (
+    <button
+      type="button"
+      className={className}
+      disabled={disabled}
+      onClick={() => {
+        if (armed) {
+          setArmed(false);
+          onConfirm();
+        } else setArmed(true);
+      }}
+    >
+      {armed ? confirmLabel : children}
+    </button>
+  );
+}

@@ -6,7 +6,7 @@ import { formatDate, formatRelativeDays, ruleRateDisplay } from "../../../core/f
 import { computeDataQuality, type QualityItem } from "../../../core/quality/dataQuality";
 import { daysSince } from "../../../core/time";
 import { entityId } from "../../../core/validation/validate";
-import { Badge, DataStatusBadge } from "../../components/ui";
+import { Badge, ConfirmButton, DataStatusBadge } from "../../components/ui";
 import { navigate } from "../../router";
 import { useCatalog } from "../../state/AppState";
 import type { ProviderInfo } from "../../state/repository";
@@ -160,6 +160,7 @@ function CollectionTable({ collection, onEdit }: { collection: CollectionName; o
   const { dataset, repo, replaceDataset, now, catalog } = useCatalog();
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState<string>();
+  const [actionError, setActionError] = useState<string>();
   const lookup = useCallback(
     (c: CollectionName, id: string) => {
       if (c === "cards") return catalog.cards.get(id)?.name ?? id;
@@ -174,10 +175,11 @@ function CollectionTable({ collection, onEdit }: { collection: CollectionName; o
 
   const act = async (id: string, fn: () => Promise<unknown>) => {
     setBusy(id);
+    setActionError(undefined);
     try {
       await fn();
     } catch (e) {
-      alert((e as Error).message);
+      setActionError(`${id}: ${(e as Error).message}`);
     } finally {
       setBusy(undefined);
     }
@@ -191,6 +193,7 @@ function CollectionTable({ collection, onEdit }: { collection: CollectionName; o
           + New {COLLECTION_LABELS[collection].toLowerCase()}
         </button>
       </div>
+      {actionError && <div className="callout callout--danger small">{actionError}</div>}
       <div className="table-wrap">
         <table className="admin-table">
           <thead>
@@ -218,9 +221,9 @@ function CollectionTable({ collection, onEdit }: { collection: CollectionName; o
                     <button type="button" className="btn btn--ghost btn--xs" disabled={busy === id} onClick={() => act(id, async () => replaceDataset(await repo!.verify(collection, id)))} title="Record that this was checked against its official source today">
                       Mark verified
                     </button>
-                    <button type="button" className="btn btn--danger-ghost btn--xs" disabled={busy === id} onClick={() => confirm(`Delete ${id}?`) && act(id, async () => replaceDataset(await repo!.remove(collection, id)))}>
+                    <ConfirmButton className="btn btn--danger-ghost btn--xs" confirmLabel="Confirm delete" disabled={busy === id} onConfirm={() => act(id, async () => replaceDataset(await repo!.remove(collection, id)))}>
                       Delete
-                    </button>
+                    </ConfirmButton>
                   </td>
                 </tr>
               );

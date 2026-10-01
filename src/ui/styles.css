@@ -43,7 +43,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0b1218;
     --surface: #111b24;
     --surface-2: #0f1720;
@@ -78,6 +78,41 @@
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
     color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1218;
+  --surface: #111b24;
+  --surface-2: #0f1720;
+  --ink: #e6edf3;
+  --ink-2: #c3ced8;
+  --muted: #8b9bab;
+  --line: #1f2c38;
+  --line-2: #2c3b49;
+  --brand: #0e3348;
+  --brand-2: #164b69;
+  --good: #4ade80;
+  --good-bg: #0f2a1b;
+  --warn: #fbbf24;
+  --warn-bg: #2b2108;
+  --danger: #f87171;
+  --danger-bg: #2c1212;
+  --info: #93c5fd;
+  --deal: #fb923c;
+  --deal-bg: #2c1708;
+  --cash: #4ade80;
+  --cash-bg: #0d2a1a;
+  --miles: #93c5fd;
+  --miles-bg: #0f1f3d;
+  --points: #c4b5fd;
+  --points-bg: #221a3d;
+  --hotel: #fdba74;
+  --hotel-bg: #2d1a0b;
+  --discount: #f9a8d4;
+  --discount-bg: #2e1222;
+  --demo: #fcd34d;
+  --demo-bg: #2b2108;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  color-scheme: dark;
 }
 
 * {
@@ -170,9 +205,14 @@ button {
   margin: 0 auto;
 }
 
+@media (max-width: 760px) {
+  :root[data-theme="dark"] .nav__link.is-active {
+    color: var(--accent);
+  }
+}
 .topbar {
   position: sticky;
-  top: 0;
+  top: env(safe-area-inset-top, 0px);
   z-index: 20;
   display: flex;
   align-items: center;
@@ -315,7 +355,7 @@ button {
   }
 }
 @media (prefers-color-scheme: dark) and (max-width: 760px) {
-  .nav__link.is-active {
+  :root:not([data-theme="light"]) .nav__link.is-active {
     color: var(--accent);
   }
 }
